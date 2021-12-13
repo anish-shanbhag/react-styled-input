@@ -1,15 +1,9 @@
 import { useState, useRef, useLayoutEffect } from "react";
+
 import styles from "./index.module.css";
-console.log(styles.styledInput);
 
 // TODO: properly type props
-export default function StyledInput({
-  onChange,
-  onEnter,
-}: {
-  onChange: any;
-  onEnter: any;
-}) {
+export function StyledInput({ onChange, onEnter }: { onChange: Function; onEnter: Function }) {
   const [focused, setFocused] = useState(false);
   const [value, setValue] = useState("initial value");
 
@@ -49,6 +43,8 @@ export default function StyledInput({
   }
 
   useLayoutEffect(() => {
+    console.log(focused, editable.current);
+
     if (!focused || !editable.current) return;
     const range = document.createRange();
     range.setStart(editable.current, 0);
@@ -58,7 +54,7 @@ export default function StyledInput({
     oldLength.current = newLength;
 
     // TODO: properly type this
-    async function addToRange(node: any) {
+    function addToRange(node: any) {
       if (chars === 0) range.setEnd(node, 0);
       else if (node.nodeType === Node.TEXT_NODE) {
         if (node.textContent.length < chars) {
@@ -88,6 +84,14 @@ export default function StyledInput({
     }
   }, [focused, value]);
 
+  function onKeyDown(e: any) {
+    if (e.key === "Backspace" || e.key === "Delete") changeValue(e);
+    else if (e.key === "Enter") {
+      onEnter();
+      e.preventDefault();
+    }
+  }
+
   return (
     <div
       ref={editable}
@@ -95,25 +99,16 @@ export default function StyledInput({
       suppressContentEditableWarning
       className={styles.styledInput}
       spellCheck={false}
-      onKeyDown={(e) => {
-        if (e.key === "Backspace" || e.key === "Delete") changeValue(e);
-        else if (e.key === "Enter") {
-          onEnter();
-          e.preventDefault();
-        }
-      }}
+      onKeyDown={onKeyDown}
       onKeyPress={changeValue}
       onPaste={changeValue}
       onBlur={() => setFocused(false)}
       onFocus={() => setFocused(true)}
     >
       {value.split(" ").map((a, i) => (
-        <span
-          key={Math.random()}
-          style={{ color: Math.random() > 0.5 ? "#fd0" : "0df" }}
-        >
+        <span key={value + i} style={{ color: Math.random() > 0.5 ? "#fd0" : "0df" }}>
           {a}
-          {i != value.split(" ").length - 1 && " "}
+          {i !== value.split(" ").length - 1 && " "}
         </span>
       ))}
     </div>
