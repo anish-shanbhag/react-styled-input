@@ -15,7 +15,7 @@
   "author": "",
   "license": "MIT",
   "scripts": {
-    "start": "nodemon -e ts,tsx --watch src --exec \"rollup -c\"",
+    "start": "nodemon -e css,ts,tsx --watch src --exec \"rollup -c\"",
     "build": "rm -rf dist && rollup -c",
     "size": "size-limit"
   },

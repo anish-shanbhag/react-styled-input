@@ -1,8 +1,9 @@
 .styledInput {
   cursor: text;
-  border: 1px solid transparent;
+  border: 1px solid #767676;
   white-space: pre;
   overflow-x: auto;
+  width: 168px;
 }
 
 .styledInput::-webkit-scrollbar {

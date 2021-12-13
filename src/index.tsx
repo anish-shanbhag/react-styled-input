@@ -12,11 +12,11 @@ export function StyledInput({ onChange, onEnter }: { onChange: Function; onEnter
   const oldLength = useRef(0);
 
   function changeValue(e: KeyboardEvent | ClipboardEvent) {
-    const range = window.getSelection()?.getRangeAt(0);
-    if (!range) return;
-
+    const selection = window.getSelection();
+    if (!selection || !editable.current) return;
+    const range = selection.getRangeAt(0);
     const clonedRange = range.cloneRange();
-    clonedRange.selectNodeContents(editable.current as Node);
+    clonedRange.selectNodeContents(editable.current);
     clonedRange.setEnd(range.startContainer, range.startOffset);
     let start = clonedRange.toString().length;
     clonedRange.setEnd(range.endContainer, range.endOffset);
@@ -26,14 +26,14 @@ export function StyledInput({ onChange, onEnter }: { onChange: Function; onEnter
       if (key === "Backspace") start--;
       else if (key === "Delete") end++;
     }
-    const text = editable.current?.textContent as string;
+    const text = editable.current.textContent as string;
     start = Math.max(0, start);
     end = Math.min(text.length, end);
 
     const newText =
       key === "Backspace" || key === "Delete"
         ? ""
-        : key ?? (e as ClipboardEvent).clipboardData.getData("text/plain").replace(/\n/g, "");
+        : key || (e as ClipboardEvent).clipboardData.getData("text/plain").replace(/\n|\r/g, "");
     caretIndex.current = end;
 
     const newValue = text.slice(0, start) + newText + text.slice(end);
@@ -53,7 +53,7 @@ export function StyledInput({ onChange, onEnter }: { onChange: Function; onEnter
 
     function addToRange(node: Node) {
       if (chars === 0) range.setEnd(node, 0);
-      else if (node.nodeType === Node.TEXT_NODE && node.textContent !== null) {
+      else if (node.nodeType === Node.TEXT_NODE && node.textContent) {
         if (node.textContent.length < chars) {
           chars -= node.textContent.length;
         } else {
