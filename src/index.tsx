@@ -1,4 +1,4 @@
-import { useState, useRef, useLayoutEffect } from "react";
+import { useState, useRef, useLayoutEffect, KeyboardEvent, ClipboardEvent } from "react";
 
 import styles from "./index.module.css";
 
@@ -11,8 +11,7 @@ export function StyledInput({ onChange, onEnter }: { onChange: Function; onEnter
   const caretIndex = useRef(0);
   const oldLength = useRef(0);
 
-  // TODO: properly type parameter
-  function changeValue(e: any) {
+  function changeValue(e: KeyboardEvent | ClipboardEvent) {
     const range = window.getSelection()?.getRangeAt(0);
     if (!range) return;
 
@@ -22,18 +21,19 @@ export function StyledInput({ onChange, onEnter }: { onChange: Function; onEnter
     let start = clonedRange.toString().length;
     clonedRange.setEnd(range.endContainer, range.endOffset);
     let end = clonedRange.toString().length;
+    const key = (e as KeyboardEvent).key;
     if (start === end) {
-      start -= e.key === "Backspace" ? 1 : 0;
-      end += e.key === "Delete" ? 1 : 0;
+      if (key === "Backspace") start--;
+      else if (key === "Delete") end++;
     }
     const text = editable.current?.textContent as string;
     start = Math.max(0, start);
     end = Math.min(text.length, end);
 
     const newText =
-      e.key === "Backspace" || e.key === "Delete"
+      key === "Backspace" || key === "Delete"
         ? ""
-        : e.key ?? e.clipboardData.getData("text/plain").replace(/\n/g, "");
+        : key ?? (e as ClipboardEvent).clipboardData.getData("text/plain").replace(/\n/g, "");
     caretIndex.current = end;
 
     const newValue = text.slice(0, start) + newText + text.slice(end);
@@ -43,8 +43,6 @@ export function StyledInput({ onChange, onEnter }: { onChange: Function; onEnter
   }
 
   useLayoutEffect(() => {
-    console.log(focused, editable.current);
-
     if (!focused || !editable.current) return;
     const range = document.createRange();
     range.setStart(editable.current, 0);
@@ -53,10 +51,9 @@ export function StyledInput({ onChange, onEnter }: { onChange: Function; onEnter
     let chars = caretIndex.current + newLength - oldLength.current;
     oldLength.current = newLength;
 
-    // TODO: properly type this
-    function addToRange(node: any) {
+    function addToRange(node: Node) {
       if (chars === 0) range.setEnd(node, 0);
-      else if (node.nodeType === Node.TEXT_NODE) {
+      else if (node.nodeType === Node.TEXT_NODE && node.textContent !== null) {
         if (node.textContent.length < chars) {
           chars -= node.textContent.length;
         } else {
@@ -84,7 +81,7 @@ export function StyledInput({ onChange, onEnter }: { onChange: Function; onEnter
     }
   }, [focused, value]);
 
-  function onKeyDown(e: any) {
+  function onKeyDown(e: KeyboardEvent) {
     if (e.key === "Backspace" || e.key === "Delete") changeValue(e);
     else if (e.key === "Enter") {
       onEnter();
