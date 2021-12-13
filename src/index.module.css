@@ -1,0 +1,15 @@
+.styledInput {
+  cursor: text;
+  border: 1px solid transparent;
+  white-space: pre;
+  overflow-x: auto;
+}
+
+.styledInput::-webkit-scrollbar {
+  display: none;
+}
+
+.styledInput * {
+  white-space: pre;
+  display: inline-block;
+}
