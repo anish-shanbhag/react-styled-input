@@ -1,4 +1,4 @@
-import { useState, useRef, useLayoutEffect, KeyboardEvent, ClipboardEvent, ReactNode } from "react";
+import { useRef, useLayoutEffect, KeyboardEvent, ClipboardEvent, ReactNode } from "react";
 
 import styles from "./index.module.css";
 
@@ -8,13 +8,9 @@ export interface StyledInputProps {
   onEnter?: () => void;
 }
 
-// TODO: fix incorrect initial caret position on Firefox
-
 // TODO: since newLength is controlled by the children textContent, maybe throw an error if the textContent length unexpectedly changes
 
 export function StyledInput({ children, onChange, onEnter }: StyledInputProps) {
-  const [focused, setFocused] = useState(false);
-
   const editable = useRef<HTMLDivElement>(null);
   const caretIndex = useRef(0);
   const oldLength = useRef(0);
@@ -50,11 +46,10 @@ export function StyledInput({ children, onChange, onEnter }: StyledInputProps) {
   }
 
   useLayoutEffect(() => {
-    if (!focused || !editable.current) return;
     const range = document.createRange();
-    range.setStart(editable.current, 0);
-    range.selectNode(editable.current);
-    const newLength = (editable.current.textContent as string).length;
+    range.setStart(editable.current!, 0);
+    range.selectNode(editable.current!);
+    const newLength = editable.current!.textContent!.length;
     let chars = caretIndex.current + newLength - oldLength.current;
     oldLength.current = newLength;
 
@@ -75,18 +70,18 @@ export function StyledInput({ children, onChange, onEnter }: StyledInputProps) {
       }
     }
 
-    addToRange(editable.current);
+    addToRange(editable.current!);
     range.collapse(false);
     const selection = window.getSelection() as Selection;
     selection.removeAllRanges();
     selection.addRange(range);
 
     const caretPosition = range.getBoundingClientRect().right;
-    const inputRightEdge = editable.current.getBoundingClientRect().right;
+    const inputRightEdge = editable.current!.getBoundingClientRect().right;
     if (caretPosition > inputRightEdge) {
-      editable.current.scrollLeft += caretPosition - inputRightEdge + 2;
+      editable.current!.scrollLeft += caretPosition - inputRightEdge + 2;
     }
-  }, [focused, children]);
+  }, [children]);
 
   function onKeyDown(e: KeyboardEvent) {
     if (e.key === "Backspace" || e.key === "Delete") changeValue(e);
@@ -106,8 +101,6 @@ export function StyledInput({ children, onChange, onEnter }: StyledInputProps) {
       onKeyDown={onKeyDown}
       onKeyPress={changeValue}
       onPaste={changeValue}
-      onBlur={() => setFocused(false)}
-      onFocus={() => setFocused(true)}
     >
       {children}
     </div>

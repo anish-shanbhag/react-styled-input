@@ -3,6 +3,7 @@
   border: 1px solid #767676;
   white-space: pre;
   overflow-x: auto;
+  scrollbar-width: none;
   width: 168px;
   caret-color: black;
 }
