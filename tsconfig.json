@@ -2,8 +2,8 @@
   "compilerOptions": {
     "outDir": "lib/esm",
     "module": "esnext",
-    "target": "es6",
-    "lib": ["es6", "dom", "dom.iterable", "es2016", "es2017"],
+    "target": "es2018",
+    "lib": ["es2018", "dom", "dom.iterable"],
     "jsx": "react-jsx",
     "declaration": true,
     "moduleResolution": "node",
