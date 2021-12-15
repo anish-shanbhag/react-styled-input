@@ -1,8 +1,24 @@
-import { useRef, useLayoutEffect, KeyboardEvent, ClipboardEvent, ReactNode } from "react";
+import {
+  useRef,
+  useLayoutEffect,
+  KeyboardEvent,
+  ClipboardEvent,
+  ReactNode,
+  HTMLAttributes,
+} from "react";
 
 import styles from "./index.module.css";
 
-export interface StyledInputProps {
+export interface StyledInputProps
+  extends Omit<
+    HTMLAttributes<HTMLDivElement>,
+    | "onChange"
+    | "contentEditable"
+    | "suppressContentEditableWarning"
+    | "onKeyDown"
+    | "onKeyPress"
+    | "onPaste"
+  > {
   children: ReactNode;
   onChange?: (value: string) => void;
   onEnter?: () => void;
@@ -10,7 +26,7 @@ export interface StyledInputProps {
 
 // TODO: since newLength is controlled by the children textContent, maybe throw an error if the textContent length unexpectedly changes
 
-export function StyledInput({ children, onChange, onEnter }: StyledInputProps) {
+export function StyledInput({ children, onChange, onEnter, ...props }: StyledInputProps) {
   const editable = useRef<HTMLDivElement>(null);
   const caretPosition = useRef(0);
   const oldLength = useRef(0);
@@ -101,6 +117,7 @@ export function StyledInput({ children, onChange, onEnter }: StyledInputProps) {
       onKeyDown={onKeyDown}
       onKeyPress={changeValue}
       onPaste={changeValue}
+      {...props}
     >
       {children}
     </div>
