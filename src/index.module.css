@@ -4,6 +4,7 @@
   white-space: pre;
   overflow-x: auto;
   width: 168px;
+  caret-color: black;
 }
 
 .styledInput::-webkit-scrollbar {

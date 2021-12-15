@@ -7,8 +7,6 @@
     "jsx": "react-jsx",
     "declaration": true,
     "moduleResolution": "node",
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
     "esModuleInterop": true,
     "noImplicitReturns": true,
     "noImplicitThis": true,

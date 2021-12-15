@@ -1,11 +1,19 @@
-import { useState, useRef, useLayoutEffect, KeyboardEvent, ClipboardEvent } from "react";
+import { useState, useRef, useLayoutEffect, KeyboardEvent, ClipboardEvent, ReactNode } from "react";
 
 import styles from "./index.module.css";
 
-// TODO: properly type props
-export function StyledInput({ onChange, onEnter }: { onChange: Function; onEnter: Function }) {
+export interface StyledInputProps {
+  children: ReactNode;
+  onChange?: (newValue: string) => void;
+  onEnter?: () => void;
+}
+
+// TODO: fix incorrect initial caret position on Firefox
+
+// TODO: since newLength is controlled by the children textContent, maybe throw an error if the textContent length unexpectedly changes
+
+export function StyledInput({ children, onChange, onEnter }: StyledInputProps) {
   const [focused, setFocused] = useState(false);
-  const [value, setValue] = useState("initial value");
 
   const editable = useRef<HTMLDivElement>(null);
   const caretIndex = useRef(0);
@@ -37,8 +45,7 @@ export function StyledInput({ onChange, onEnter }: { onChange: Function; onEnter
     caretIndex.current = end;
 
     const newValue = text.slice(0, start) + newText + text.slice(end);
-    setValue(newValue);
-    onChange(newValue);
+    if (onChange) onChange(newValue);
     e.preventDefault();
   }
 
@@ -47,7 +54,7 @@ export function StyledInput({ onChange, onEnter }: { onChange: Function; onEnter
     const range = document.createRange();
     range.setStart(editable.current, 0);
     range.selectNode(editable.current);
-    const newLength = value.length;
+    const newLength = (editable.current.textContent as string).length;
     let chars = caretIndex.current + newLength - oldLength.current;
     oldLength.current = newLength;
 
@@ -79,12 +86,12 @@ export function StyledInput({ onChange, onEnter }: { onChange: Function; onEnter
     if (caretPosition > inputRightEdge) {
       editable.current.scrollLeft += caretPosition - inputRightEdge + 2;
     }
-  }, [focused, value]);
+  }, [focused, children]);
 
   function onKeyDown(e: KeyboardEvent) {
     if (e.key === "Backspace" || e.key === "Delete") changeValue(e);
     else if (e.key === "Enter") {
-      onEnter();
+      if (onEnter) onEnter();
       e.preventDefault();
     }
   }
@@ -102,12 +109,7 @@ export function StyledInput({ onChange, onEnter }: { onChange: Function; onEnter
       onBlur={() => setFocused(false)}
       onFocus={() => setFocused(true)}
     >
-      {value.split(" ").map((a, i) => (
-        <span key={value + i} style={{ color: Math.random() > 0.5 ? "#fd0" : "0df" }}>
-          {a}
-          {i !== value.split(" ").length - 1 && " "}
-        </span>
-      ))}
+      {children}
     </div>
   );
 }
