@@ -4,7 +4,7 @@ import styles from "./index.module.css";
 
 export interface StyledInputProps {
   children: ReactNode;
-  onChange?: (newValue: string) => void;
+  onChange?: (value: string) => void;
   onEnter?: () => void;
 }
 
@@ -12,7 +12,7 @@ export interface StyledInputProps {
 
 export function StyledInput({ children, onChange, onEnter }: StyledInputProps) {
   const editable = useRef<HTMLDivElement>(null);
-  const caretIndex = useRef(0);
+  const caretPosition = useRef(0);
   const oldLength = useRef(0);
 
   function changeValue(e: KeyboardEvent | ClipboardEvent) {
@@ -38,7 +38,7 @@ export function StyledInput({ children, onChange, onEnter }: StyledInputProps) {
       key === "Backspace" || key === "Delete"
         ? ""
         : key || (e as ClipboardEvent).clipboardData.getData("text/plain").replace(/\n|\r/g, "");
-    caretIndex.current = end;
+    caretPosition.current = end;
 
     const newValue = text.slice(0, start) + newText + text.slice(end);
     if (onChange) onChange(newValue);
@@ -50,7 +50,7 @@ export function StyledInput({ children, onChange, onEnter }: StyledInputProps) {
     range.setStart(editable.current!, 0);
     range.selectNode(editable.current!);
     const newLength = editable.current!.textContent!.length;
-    let chars = caretIndex.current + newLength - oldLength.current;
+    let chars = caretPosition.current + newLength - oldLength.current;
     oldLength.current = newLength;
 
     function addToRange(node: Node) {
@@ -76,10 +76,10 @@ export function StyledInput({ children, onChange, onEnter }: StyledInputProps) {
     selection.removeAllRanges();
     selection.addRange(range);
 
-    const caretPosition = range.getBoundingClientRect().right;
+    const selectionPosition = range.getBoundingClientRect().right;
     const inputRightEdge = editable.current!.getBoundingClientRect().right;
-    if (caretPosition > inputRightEdge) {
-      editable.current!.scrollLeft += caretPosition - inputRightEdge + 2;
+    if (selectionPosition > inputRightEdge) {
+      editable.current!.scrollLeft += selectionPosition - inputRightEdge + 2;
     }
   }, [children]);
 
