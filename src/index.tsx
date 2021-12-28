@@ -5,9 +5,8 @@ import {
   ClipboardEvent,
   ReactNode,
   HTMLAttributes,
+  ReactElement,
 } from "react";
-
-import styles from "./index.module.css";
 
 export interface StyledInputProps
   extends Omit<
@@ -18,18 +17,50 @@ export interface StyledInputProps
     | "onKeyDown"
     | "onKeyPress"
     | "onPaste"
+    | "placeholder"
   > {
   children: ReactNode;
+  placeholder?: ReactNode;
   onChange?: (value: string) => void;
   onEnter?: () => void;
 }
 
 // TODO: since newLength is controlled by the children textContent, maybe throw an error if the textContent length unexpectedly changes
+// TODO: make sure caret behaves properly when programmatically setting children or when two StyledInputs depend on each others' values
+// TOOD: allow for manually setting value
+// TODO: handle 0-length elements like images within the input
+// TODO: handle custom handling for backspace/tab/etc.
+// TODO: add regex-based component matching
+// TODO: add custom carets and highlights
+// TODO: think about implementations of mentions/autocomplete suggestions
+// TODO: add comments
+// TODO: add TypeDoc documentation
 
-export function StyledInput({ children, onChange, onEnter, ...props }: StyledInputProps) {
+let injected = false;
+
+function getNodeText(node: ReactNode): string {
+  return typeof node === "string"
+    ? node
+    : Array.isArray(node)
+    ? node.map(getNodeText).join("")
+    : typeof node === "object"
+    ? getNodeText((node as ReactElement).props.children)
+    : "";
+}
+
+export function StyledInput({
+  children,
+  placeholder,
+  onChange,
+  onEnter,
+  style,
+  className,
+  ...props
+}: StyledInputProps) {
   const editable = useRef<HTMLDivElement>(null);
   const caretPosition = useRef(0);
   const oldLength = useRef(0);
+  const childrenTextContent = getNodeText(children);
 
   function changeValue(e: KeyboardEvent | ClipboardEvent) {
     const selection = window.getSelection();
@@ -53,7 +84,8 @@ export function StyledInput({ children, onChange, onEnter, ...props }: StyledInp
     const newText =
       key === "Backspace" || key === "Delete"
         ? ""
-        : key || (e as ClipboardEvent).clipboardData.getData("text/plain").replace(/\n|\r/g, "");
+        : key ??
+          (e as ClipboardEvent).clipboardData.getData("text/plain").replace(/\r?\n|\r/g, " ");
     caretPosition.current = end;
 
     const newValue = text.slice(0, start) + newText + text.slice(end);
@@ -62,6 +94,12 @@ export function StyledInput({ children, onChange, onEnter, ...props }: StyledInp
   }
 
   useLayoutEffect(() => {
+    if (!injected) {
+      injected = true;
+      const style = document.head.appendChild(document.createElement("style"));
+      style.textContent = ".g0b4zwthie8::-webkit-scrollbar{display:none}";
+    }
+
     const range = document.createRange();
     range.setStart(editable.current!, 0);
     range.selectNode(editable.current!);
@@ -108,18 +146,49 @@ export function StyledInput({ children, onChange, onEnter, ...props }: StyledInp
   }
 
   return (
-    <div
-      ref={editable}
-      contentEditable
-      suppressContentEditableWarning
-      className={styles.styledInput}
-      spellCheck={false}
-      onKeyDown={onKeyDown}
-      onKeyPress={changeValue}
-      onPaste={changeValue}
-      {...props}
-    >
-      {children}
-    </div>
+    <span style={{ position: "relative" }}>
+      {placeholder && !childrenTextContent && (
+        <span
+          style={{
+            position: "absolute",
+            width: "162px",
+            color: "grey",
+            overflowX: "hidden",
+            pointerEvents: "none",
+            paddingTop: style?.paddingTop,
+            paddingRight: style?.paddingRight,
+            paddingBottom: style?.paddingBottom,
+            paddingLeft: style?.paddingLeft,
+            padding: style?.padding ?? "3px 4px 2.5px 5px",
+          }}
+        >
+          {placeholder}
+        </span>
+      )}
+      <div
+        ref={editable}
+        contentEditable
+        suppressContentEditableWarning
+        spellCheck={false}
+        onKeyDown={onKeyDown}
+        onKeyPress={changeValue}
+        onPaste={changeValue}
+        style={{
+          display: "inline-block",
+          width: "162px",
+          border: ".1px solid #767676",
+          whiteSpace: "pre",
+          overflowX: "auto",
+          scrollbarWidth: "none",
+          caretColor: "black",
+          padding: "2.8px 4px 2.5px 4px",
+          ...style,
+        }}
+        className={"g0b4zwthie8 " + (className ?? "")}
+        {...props}
+      >
+        {childrenTextContent && children}
+      </div>
+    </span>
   );
 }

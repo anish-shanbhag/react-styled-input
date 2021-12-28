@@ -1,5 +1,4 @@
-import typescript from "rollup-plugin-typescript2";
-import postcss from "rollup-plugin-postcss";
+import typescript from "@rollup/plugin-typescript";
 import peerDepsExternal from "rollup-plugin-peer-deps-external";
 
 const packageJson = require("./package.json");
@@ -19,6 +18,6 @@ export default [
         sourcemap: true,
       },
     ],
-    plugins: [peerDepsExternal(), typescript({ tsconfig: "./tsconfig.json" }), postcss()],
+    plugins: [peerDepsExternal(), typescript({ tsconfig: "./tsconfig.json" })],
   },
 ];

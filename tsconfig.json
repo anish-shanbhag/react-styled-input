@@ -1,9 +1,9 @@
 {
   "compilerOptions": {
-    "outDir": "lib/esm",
+    "outDir": ".",
     "module": "esnext",
-    "target": "es2018",
-    "lib": ["es2018", "dom", "dom.iterable"],
+    "target": "es2020",
+    "lib": ["es2020", "dom", "dom.iterable"],
     "jsx": "react-jsx",
     "declaration": true,
     "moduleResolution": "node",
