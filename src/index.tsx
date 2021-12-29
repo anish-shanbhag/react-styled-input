@@ -6,6 +6,7 @@ import {
   ReactNode,
   HTMLAttributes,
   ReactElement,
+  MutableRefObject,
 } from "react";
 
 export interface StyledInputProps
@@ -20,24 +21,17 @@ export interface StyledInputProps
     | "placeholder"
   > {
   children: ReactNode;
+  caretPosition?: MutableRefObject<number>;
   placeholder?: ReactNode;
   onChange?: (value: string) => void;
   onEnter?: () => void;
 }
 
-// TODO: since newLength is controlled by the children textContent, maybe throw an error if the textContent length unexpectedly changes
-// TODO: make sure caret behaves properly when programmatically setting children or when two StyledInputs depend on each others' values
-// TOOD: allow for manually setting value
-// TODO: handle 0-length elements like images within the input
-// TODO: handle custom handling for backspace/tab/etc.
-// TODO: add regex-based component matching
-// TODO: add custom carets and highlights
-// TODO: think about implementations of mentions/autocomplete suggestions
-// TODO: add comments
-// TODO: add TypeDoc documentation
+// shared flag between all StyledInput components which keeps track of whether CSS has been injected
+// into the document already
+let styleInjected = false;
 
-let injected = false;
-
+// returns the text content of a JSX element
 function getNodeText(node: ReactNode): string {
   return typeof node === "string"
     ? node
@@ -60,6 +54,7 @@ export function StyledInput({
   const editable = useRef<HTMLDivElement>(null);
   const caretPosition = useRef(0);
   const oldLength = useRef(0);
+  const valueChanged = useRef(false);
   const childrenTextContent = getNodeText(children);
 
   function changeValue(e: KeyboardEvent | ClipboardEvent) {
@@ -89,16 +84,19 @@ export function StyledInput({
     caretPosition.current = end;
 
     const newValue = text.slice(0, start) + newText + text.slice(end);
+    valueChanged.current = true;
     if (onChange) onChange(newValue);
     e.preventDefault();
   }
 
   useLayoutEffect(() => {
-    if (!injected) {
-      injected = true;
+    if (!styleInjected) {
+      styleInjected = true;
       const style = document.head.appendChild(document.createElement("style"));
       style.textContent = ".g0b4zwthie8::-webkit-scrollbar{display:none}";
     }
+
+    if (!valueChanged.current) return;
 
     const range = document.createRange();
     range.setStart(editable.current!, 0);
@@ -135,6 +133,8 @@ export function StyledInput({
     if (selectionPosition > inputRightEdge) {
       editable.current!.scrollLeft += selectionPosition - inputRightEdge + 2;
     }
+
+    valueChanged.current = false;
   }, [children]);
 
   function onKeyDown(e: KeyboardEvent) {
